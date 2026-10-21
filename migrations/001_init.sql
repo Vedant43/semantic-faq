@@ -7,11 +7,9 @@ CREATE TABLE documents (
   content_hash CHAR(64) NOT NULL,
   embedding vector(384),
   embedding_status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (embedding_status IN ('pending','ready','failed')),
+    CHECK (embedding_status IN ('pending','ready')),
   CONSTRAINT ready_requires_embedding
     CHECK (embedding_status <> 'ready' OR embedding IS NOT NULL),
-  tsv tsvector GENERATED ALWAYS AS
-    (to_tsvector('english', title || ' ' || content)) STORED,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -23,4 +21,3 @@ CREATE TABLE embedding_cache (
 );
 
 CREATE INDEX documents_embedding_idx ON documents USING hnsw (embedding vector_cosine_ops);
-CREATE INDEX documents_tsv_idx ON documents USING gin (tsv);
