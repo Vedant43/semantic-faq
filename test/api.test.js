@@ -1,0 +1,136 @@
+import { after, before, describe, test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import pg from "pg";
+
+const ADMIN_URL = process.env.TEST_ADMIN_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/postgres";
+const TEST_DB = "faq_test";
+const API_KEY = "test-key";
+
+process.env.DATABASE_URL = ADMIN_URL.replace(/\/[^/]*$/, `/${TEST_DB}`);
+process.env.API_KEY = API_KEY;
+
+let server, base, pool;
+
+const headers = { "content-type": "application/json", "x-api-key": API_KEY };
+const post = (path, body, h = headers) =>
+  fetch(base + path, { method: "POST", headers: h, body: typeof body === "string" ? body : JSON.stringify(body) });
+const add = (title, content) => post("/documents", { title, content });
+const ask = async (question) => (await (await post("/ask", { question })).json()).results;
+
+before(async () => {
+  const admin = new pg.Client(ADMIN_URL);
+  await admin.connect();
+  await admin.query(`DROP DATABASE IF EXISTS ${TEST_DB}`);
+  await admin.query(`CREATE DATABASE ${TEST_DB}`);
+  await admin.end();
+
+  pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  await pool.query(readFileSync("migrations/001_init.sql", "utf8"));
+
+  const { default: app } = await import("../src/app.js");
+  server = app.listen(0);
+  base = `http://localhost:${server.address().port}`;
+});
+
+after(async () => {
+  server?.close();
+  const { pool: appPool } = await import("../src/db.js");
+  await appPool.end();
+  await pool.end();
+  const admin = new pg.Client(ADMIN_URL);
+  await admin.connect();
+  await admin.query(`DROP DATABASE IF EXISTS ${TEST_DB}`);
+  await admin.end();
+});
+
+describe("auth and validation", () => {
+  test("health needs no key", async () => {
+    assert.equal((await fetch(base + "/health")).status, 200);
+  });
+
+  test("missing or wrong key is 401", async () => {
+    assert.equal((await post("/ask", { question: "hi" }, { "content-type": "application/json" })).status, 401);
+    assert.equal((await post("/documents", {}, { ...headers, "x-api-key": "nope" })).status, 401);
+  });
+
+  test("invalid document is 400", async () => {
+    for (const body of [{}, { title: "", content: "x" }, { title: "x", content: "  " }, { title: "x", content: "a".repeat(5001) }]) {
+      assert.equal((await post("/documents", body)).status, 400);
+    }
+  });
+
+  test("invalid question is 400", async () => {
+    for (const body of [{}, { question: "" }, { question: 42 }, { question: "a".repeat(501) }]) {
+      assert.equal((await post("/ask", body)).status, 400);
+    }
+  });
+
+  test("malformed JSON is 400 and unknown route is 404", async () => {
+    assert.equal((await post("/ask", "{not json")).status, 400);
+    assert.equal((await fetch(base + "/nope")).status, 404);
+  });
+});
+
+describe("retrieval", () => {
+  test("empty store returns no results", async () => {
+    assert.deepEqual(await ask("anything at all"), []);
+  });
+
+  test("ranks by meaning, not keywords, and returns the top three with scores", async () => {
+    await add("Reset password", "Click 'Forgot password' on the login page and follow the emailed link to choose a new one.");
+    await add("Refund policy", "Purchases can be refunded within 30 days if the product is unused. Contact billing to start a refund.");
+    await add("Office hours", "Support is available Monday to Friday, 9am to 5pm UTC.");
+    await add("Shipping times", "Orders usually arrive within five business days.");
+
+    const login = await ask("I can't log in, how do I get a new password?");
+    assert.equal(login.length, 3);
+    assert.equal(login[0].title, "Reset password");
+
+    const money = await ask("can I get my money back?");
+    assert.equal(money[0].title, "Refund policy");
+
+    for (const results of [login, money]) {
+      const scores = results.map((r) => r.score);
+      assert.deepEqual(scores, [...scores].sort((a, b) => b - a));
+      assert.ok(scores.every((s) => typeof s === "number" && s <= 1.0001));
+    }
+  });
+
+  test("pending documents are not searched", async () => {
+    await pool.query("INSERT INTO documents (title, content, content_hash) VALUES ('Parking', 'Visitor parking is in lot B.', repeat('0', 64))");
+    const titles = (await ask("where can I park my car?")).map((r) => r.title);
+    assert.ok(!titles.includes("Parking"));
+  });
+});
+
+describe("embedding cache", () => {
+  test("identical text is embedded once and reused", async () => {
+    const before = (await pool.query("SELECT count(*)::int AS n FROM embedding_cache")).rows[0].n;
+    const first = await add("Cache probe", "A snippet only this test adds.");
+    await new Promise((r) => setTimeout(r, 200)); // cache write is fire-and-forget
+    const second = await add("Cache probe", "A snippet only this test adds.");
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 201);
+
+    const after = (await pool.query("SELECT count(*)::int AS n FROM embedding_cache")).rows[0].n;
+    assert.equal(after, before + 1);
+
+    const { rows } = await pool.query("SELECT embedding::text AS e FROM documents WHERE title = 'Cache probe'");
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0].e, rows[1].e);
+  });
+});
+
+describe("rate limiting", () => {
+  test("/ask returns 429 once the per-minute limit is passed", async () => {
+    const { RATE_LIMIT_PER_MINUTE } = await import("../src/config.js");
+    let blocked;
+    for (let i = 0; i <= RATE_LIMIT_PER_MINUTE && !blocked; i++) {
+      const res = await post("/ask", { question: "hello there" });
+      if (res.status === 429) blocked = res;
+    }
+    assert.ok(blocked, "expected a 429");
+    assert.match((await blocked.json()).error, /too many/i);
+  });
+});

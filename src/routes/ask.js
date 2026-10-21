@@ -6,7 +6,6 @@ import { askSchema } from "../validate.js";
 const router = Router();
 const TOP_K = 3;
 
-// <=> is cosine distance, so similarity is 1 - distance
 async function search(vector) {
   const { rows } = await query(
     `SELECT id, title, content, 1 - (embedding <=> $1::vector) AS score
