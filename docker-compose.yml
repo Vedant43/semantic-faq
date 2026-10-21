@@ -18,7 +18,9 @@ services:
 
   app:
     build: .
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/faq
     ports:
