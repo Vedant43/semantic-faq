@@ -1,11 +1,15 @@
 import "dotenv/config";
 
+if (!process.env.API_KEY) {
+  throw new Error("API_KEY is required (set it in .env or the environment)");
+}
+
 const embeddingModel = process.env.EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
 
 export const config = {
   port: Number(process.env.PORT) || 3000,
   databaseUrl: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/faq",
-  apiKey: process.env.API_KEY || "",
+  apiKey: process.env.API_KEY,
   embeddingModel,
   embeddingProfile: process.env.EMBEDDING_PROFILE || `${embeddingModel}|mean-normalize|document-text-v1`,
   modelCacheDir: process.env.MODEL_CACHE_DIR || ".model-cache",

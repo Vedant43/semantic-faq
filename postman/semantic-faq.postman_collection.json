@@ -10,7 +10,7 @@
     },
     {
       "key": "apiKey",
-      "value": ""
+      "value": "dev-api-key"
     }
   ],
   "item": [
@@ -291,6 +291,46 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Maintenance",
+      "item": [
+        {
+          "name": "Re-embed pending documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/reembed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "reembed"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 (503 means the model is down)\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"reports counts\", () => { pm.expect(b.reembedded).to.be.a(\"number\"); pm.expect(b.remaining).to.be.a(\"number\"); });"
                 ]
               }
             }

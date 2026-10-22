@@ -9,13 +9,23 @@ const TIMEOUT_MS = 10_000;
 env.cacheDir = config.modelCacheDir;
 
 let modelPromise;
+let status = "loading";
+
+export const modelStatus = () => status;
 
 export function loadModel() {
   if (!modelPromise) {
-    modelPromise = pipeline("feature-extraction", config.embeddingModel).catch((err) => {
-      modelPromise = undefined;
-      throw err;
-    });
+    status = "loading";
+    modelPromise = pipeline("feature-extraction", config.embeddingModel)
+      .then((model) => {
+        status = "ready";
+        return model;
+      })
+      .catch((err) => {
+        status = "failed";
+        modelPromise = undefined;
+        throw err;
+      });
   }
   return modelPromise;
 }
@@ -29,8 +39,7 @@ function withTimeout(promise) {
 }
 
 export async function embed(text) {
-  const model = await loadModel();
-  const output = await withTimeout(model(text, { pooling: "mean", normalize: true }));
+  const output = await withTimeout(loadModel().then((model) => model(text, { pooling: "mean", normalize: true })));
   const vector = Array.from(output.data);
 
   if (vector.length !== DIMENSIONS) {

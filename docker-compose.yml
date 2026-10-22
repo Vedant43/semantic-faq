@@ -25,6 +25,7 @@ services:
         required: false
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/faq
+      API_KEY: ${API_KEY:-dev-api-key}
     ports:
       - "${PORT:-3000}:3000"
     depends_on:

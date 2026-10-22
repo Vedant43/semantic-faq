@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE embeddings (
+CREATE TABLE IF NOT EXISTS embeddings (
   id BIGSERIAL PRIMARY KEY,
   content_hash CHAR(64) NOT NULL,
   embedding_profile TEXT NOT NULL,
@@ -10,9 +10,9 @@ CREATE TABLE embeddings (
   UNIQUE (content_hash, embedding_profile)
 );
 
-CREATE INDEX embeddings_vector_idx ON embeddings USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS embeddings_vector_idx ON embeddings USING hnsw (embedding vector_cosine_ops);
 
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
@@ -25,4 +25,4 @@ CREATE TABLE documents (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX documents_embedding_id_idx ON documents (embedding_id);
+CREATE INDEX IF NOT EXISTS documents_embedding_id_idx ON documents (embedding_id);

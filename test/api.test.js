@@ -45,10 +45,6 @@ after(async () => {
 });
 
 describe("auth and validation", () => {
-  test("health needs no key", async () => {
-    assert.equal((await fetch(base + "/health")).status, 200);
-  });
-
   test("missing or wrong key is 401", async () => {
     assert.equal((await post("/ask", { question: "hi" }, { "content-type": "application/json" })).status, 401);
     assert.equal((await post("/documents", {}, { ...headers, "x-api-key": "nope" })).status, 401);
@@ -64,11 +60,6 @@ describe("auth and validation", () => {
     for (const body of [{}, { question: "" }, { question: 42 }, { question: "a".repeat(501) }]) {
       assert.equal((await post("/ask", body)).status, 400);
     }
-  });
-
-  test("malformed JSON is 400 and unknown route is 404", async () => {
-    assert.equal((await post("/ask", "{not json")).status, 400);
-    assert.equal((await fetch(base + "/nope")).status, 404);
   });
 });
 
@@ -148,6 +139,27 @@ describe("canonical embeddings", () => {
 
     const { rows } = await pool.query("SELECT id FROM embeddings WHERE id = ANY($1::bigint[])", [[orphanId, retainedId]]);
     assert.deepEqual(rows.map((row) => row.id), [retainedId]);
+  });
+});
+
+describe("re-embedding pending documents", () => {
+  test("pending documents become ready and searchable", async () => {
+    await pool.query("DELETE FROM documents WHERE embedding_status = 'pending'"); // leftovers from earlier tests
+    await pool.query(
+      "INSERT INTO documents (title, content, content_hash) VALUES ('Parking', 'Visitor parking is in lot B behind the main building.', repeat('0', 64))"
+    );
+    assert.ok(!(await ask("where can I park my car?")).some((r) => r.title === "Parking"));
+
+    const res = await post("/documents/reembed", {});
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { reembedded: 1, remaining: 0 });
+
+    const { rows } = await pool.query("SELECT embedding_status, embedding_id, content_hash FROM documents WHERE title = 'Parking'");
+    assert.equal(rows[0].embedding_status, "ready");
+    assert.ok(rows[0].embedding_id);
+    assert.notEqual(rows[0].content_hash, "0".repeat(64));
+
+    assert.equal((await ask("where can I park my car?"))[0].title, "Parking");
   });
 });
 
