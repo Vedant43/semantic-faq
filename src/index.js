@@ -1,4 +1,6 @@
-import { PORT } from "./config.js";
+import { config } from "./config.js";
 import app from "./app.js";
+import { loadModel } from "./model.js";
 
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+await loadModel();
+app.listen(config.port, () => console.log(`listening on ${config.port}`));

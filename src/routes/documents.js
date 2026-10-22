@@ -16,18 +16,18 @@ router.post("/", async (req, res) => {
 
   // content_hash is NOT NULL, so we need it even if embedding fails
   let hash = hashText(text);
-  let vector = null;
+  let embeddingId = null;
   try {
-    ({ vector, hash } = await embedDocument(text));
+    ({ id: embeddingId, hash } = await embedDocument(text));
   } catch (err) {
     console.error("Embedding failed, saving as pending:", err.message);
   }
 
   const { rows } = await query(
-    `INSERT INTO documents (title, content, content_hash, embedding, embedding_status)
-     VALUES ($1, $2, $3, $4::vector, $5)
+    `INSERT INTO documents (title, content, content_hash, embedding_id, embedding_status)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING id, title, content, embedding_status, created_at`,
-    [title, content, hash, vector && JSON.stringify(vector), vector ? "ready" : "pending"]
+    [title, content, hash, embeddingId, embeddingId ? "ready" : "pending"]
   );
 
   res.status(201).json(rows[0]);

@@ -1,9 +1,8 @@
 import crypto from "node:crypto";
 import { query } from "./db.js";
-import { EMBEDDING_MODEL } from "./config.js";
+import { config } from "./config.js";
 import { embed } from "./model.js";
 
-// Embed this string and hash it
 export function documentText(title, content) {
   return `${title.trim()}\n\n${content.trim()}`;
 }
@@ -12,37 +11,46 @@ export function hashText(text) {
   return crypto.createHash("sha256").update(text.trim()).digest("hex");
 }
 
-async function readCache(hash) {
-  try {
-    const { rows } = await query(
-      "SELECT embedding FROM embedding_cache WHERE content_hash = $1 AND model = $2",
-      [hash, EMBEDDING_MODEL]
-    );
-    if (!rows.length) return null;
-    const raw = rows[0].embedding;
-    return typeof raw === "string" ? JSON.parse(raw) : raw;
-  } catch (err) {
-    console.error("Cache read failed:", err.message);
-    return null;
-  }
+async function getEmbedding(hash) {
+  const { rows } = await query(
+    `UPDATE embeddings
+     SET last_used_at = now()
+     WHERE content_hash = $1 AND embedding_profile = $2
+     RETURNING id, embedding`,
+    [hash, config.embeddingProfile]
+  );
+  const row = rows[0];
+  return row && { id: row.id, vector: parseVector(row.embedding) };
 }
 
-function writeCache(hash, vector) {
-  query(
-    "INSERT INTO embedding_cache (content_hash, model, embedding) VALUES ($1, $2, $3::vector) ON CONFLICT DO NOTHING",
-    [hash, EMBEDDING_MODEL, JSON.stringify(vector)]
-  ).catch((err) => console.error("Cache write failed:", err.message));
+function parseVector(raw) {
+  return typeof raw === "string" ? JSON.parse(raw) : raw;
 }
 
-// Documents are cached by the hash of their text
-export async function embedDocument(text) {
+async function saveEmbedding(hash, vector) {
+  const { rows } = await query(
+    `INSERT INTO embeddings (content_hash, embedding_profile, embedding)
+     VALUES ($1, $2, $3::vector)
+     ON CONFLICT (content_hash, embedding_profile)
+     DO UPDATE SET last_used_at = now()
+     RETURNING id, embedding`,
+    [hash, config.embeddingProfile, JSON.stringify(vector)]
+  );
+  return { id: rows[0].id, vector: parseVector(rows[0].embedding) };
+}
+
+async function embedCached(text) {
   const hash = hashText(text);
-  const cached = await readCache(hash);
-  if (cached) return { vector: cached, hash };
+  const existing = await getEmbedding(hash);
+  if (existing) return { ...existing, hash };
 
   const vector = await embed(text.trim());
-  writeCache(hash, vector);
-  return { vector, hash };
+  const stored = await saveEmbedding(hash, vector);
+  return { ...stored, hash };
+}
+
+export function embedDocument(text) {
+  return embedCached(text);
 }
 
 export function embedQuestion(text) {

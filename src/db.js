@@ -1,8 +1,8 @@
 import pg from "pg";
-import { DATABASE_URL } from "./config.js";
+import { config } from "./config.js";
 
 export const pool = new pg.Pool({
-  connectionString: DATABASE_URL,
+  connectionString: config.databaseUrl,
 });
 
 pool.on("error", (err) => console.error("Idle database client error:", err.message));

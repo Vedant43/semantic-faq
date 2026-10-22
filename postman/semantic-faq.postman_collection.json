@@ -217,7 +217,7 @@
           ]
         },
         {
-          "name": "Ask (repeat: should hit embedding cache, faster)",
+          "name": "Ask (repeat question)",
           "request": {
             "method": "POST",
             "header": [

@@ -1,6 +1,6 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { RATE_LIMIT_PER_MINUTE } from "./config.js";
+import { config } from "./config.js";
 import { requireApiKey } from "./middleware/apiKey.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 import askRouter from "./routes/ask.js";
@@ -13,7 +13,7 @@ app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 const askLimiter = rateLimit({
   windowMs: 60_000,
-  limit: RATE_LIMIT_PER_MINUTE,
+  limit: config.rateLimitPerMinute,
   message: { error: "Too many requests, try again shortly" },
 });
 

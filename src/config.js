@@ -1,8 +1,13 @@
 import "dotenv/config";
 
-export const PORT = Number(process.env.PORT) || 3000;
-export const DATABASE_URL = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/faq";
-export const API_KEY = process.env.API_KEY || "";
-export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
-export const MODEL_CACHE_DIR = process.env.MODEL_CACHE_DIR || ".model-cache";
-export const RATE_LIMIT_PER_MINUTE = Number(process.env.RATE_LIMIT_PER_MINUTE) || 30;
+const embeddingModel = process.env.EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
+
+export const config = {
+  port: Number(process.env.PORT) || 3000,
+  databaseUrl: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/faq",
+  apiKey: process.env.API_KEY || "",
+  embeddingModel,
+  embeddingProfile: process.env.EMBEDDING_PROFILE || `${embeddingModel}|mean-normalize|document-text-v1`,
+  modelCacheDir: process.env.MODEL_CACHE_DIR || ".model-cache",
+  rateLimitPerMinute: Number(process.env.RATE_LIMIT_PER_MINUTE) || 30,
+};

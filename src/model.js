@@ -1,13 +1,24 @@
 import { env, pipeline } from "@huggingface/transformers";
-import { EMBEDDING_MODEL, MODEL_CACHE_DIR } from "./config.js";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { config } from "./config.js";
 
 const DIMENSIONS = 384;
 const TIMEOUT_MS = 10_000;
 
-env.cacheDir = MODEL_CACHE_DIR;
+env.cacheDir = config.modelCacheDir;
 
-// Loaded once at startup
-const model = await pipeline("feature-extraction", EMBEDDING_MODEL);
+let modelPromise;
+
+export function loadModel() {
+  if (!modelPromise) {
+    modelPromise = pipeline("feature-extraction", config.embeddingModel).catch((err) => {
+      modelPromise = undefined;
+      throw err;
+    });
+  }
+  return modelPromise;
+}
 
 function withTimeout(promise) {
   let timer;
@@ -18,6 +29,7 @@ function withTimeout(promise) {
 }
 
 export async function embed(text) {
+  const model = await loadModel();
   const output = await withTimeout(model(text, { pooling: "mean", normalize: true }));
   const vector = Array.from(output.data);
 
@@ -26,4 +38,8 @@ export async function embed(text) {
   }
 
   return vector;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  await loadModel();
 }

@@ -104,29 +104,58 @@ describe("retrieval", () => {
   });
 });
 
-describe("embedding cache", () => {
+describe("canonical embeddings", () => {
   test("identical text is embedded once and reused", async () => {
-    const before = (await pool.query("SELECT count(*)::int AS n FROM embedding_cache")).rows[0].n;
+    const before = (await pool.query("SELECT count(*)::int AS n FROM embeddings")).rows[0].n;
     const first = await add("Cache probe", "A snippet only this test adds.");
-    await new Promise((r) => setTimeout(r, 200)); // cache write is fire-and-forget
     const second = await add("Cache probe", "A snippet only this test adds.");
     assert.equal(first.status, 201);
     assert.equal(second.status, 201);
 
-    const after = (await pool.query("SELECT count(*)::int AS n FROM embedding_cache")).rows[0].n;
+    const after = (await pool.query("SELECT count(*)::int AS n FROM embeddings")).rows[0].n;
     assert.equal(after, before + 1);
 
-    const { rows } = await pool.query("SELECT embedding::text AS e FROM documents WHERE title = 'Cache probe'");
+    const { rows } = await pool.query(
+      `SELECT d.embedding_id, e.embedding::text AS e
+       FROM documents d JOIN embeddings e ON e.id = d.embedding_id
+       WHERE d.title = 'Cache probe'`
+    );
     assert.equal(rows.length, 2);
+    assert.equal(rows[0].embedding_id, rows[1].embedding_id);
     assert.equal(rows[0].e, rows[1].e);
+  });
+
+  test("cleanup removes only embeddings no document references", async () => {
+    const [{ id: orphanId }] = (await pool.query(
+      `INSERT INTO embeddings (content_hash, embedding_profile, embedding)
+       VALUES (repeat('f', 64), 'unused-profile', ('[' || repeat('0,', 383) || '0]')::vector)
+       RETURNING id`
+    )).rows;
+    const [{ id: retainedId }] = (await pool.query(
+      `INSERT INTO embeddings (content_hash, embedding_profile, embedding)
+       VALUES (repeat('e', 64), 'retained-profile', ('[' || repeat('0,', 383) || '0]')::vector)
+       RETURNING id`
+    )).rows;
+    await pool.query(
+      `INSERT INTO documents (title, content, content_hash, embedding_id, embedding_status)
+       VALUES ('Retained', 'Referenced embedding.', repeat('e', 64), $1, 'ready')`,
+      [retainedId]
+    );
+    await pool.query("UPDATE embeddings SET last_used_at = now() - interval '48 hours' WHERE id = $1", [orphanId]);
+
+    const { cleanupOrphanedEmbeddings } = await import("../src/cleanupEmbeddings.js");
+    await cleanupOrphanedEmbeddings(100);
+
+    const { rows } = await pool.query("SELECT id FROM embeddings WHERE id = ANY($1::bigint[])", [[orphanId, retainedId]]);
+    assert.deepEqual(rows.map((row) => row.id), [retainedId]);
   });
 });
 
 describe("rate limiting", () => {
   test("/ask returns 429 once the per-minute limit is passed", async () => {
-    const { RATE_LIMIT_PER_MINUTE } = await import("../src/config.js");
+    const { config } = await import("../src/config.js");
     let blocked;
-    for (let i = 0; i <= RATE_LIMIT_PER_MINUTE && !blocked; i++) {
+    for (let i = 0; i <= config.rateLimitPerMinute && !blocked; i++) {
       const res = await post("/ask", { question: "hello there" });
       if (res.status === 429) blocked = res;
     }

@@ -12,7 +12,7 @@ COPY src ./src
 RUN mkdir .model-cache && chown node .model-cache
 USER node
 
-RUN node src/model.js
+RUN node src/model.js || echo "WARN: model prefetch failed, will download on first start"
 
 EXPOSE 3000
 CMD ["node", "src/index.js"]
