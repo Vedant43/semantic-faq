@@ -1,0 +1,371 @@
+{
+  "documents": [
+    {
+      "title": "Reset password",
+      "content": "Click 'Forgot password' on the login page and follow the emailed link to choose a new password. The link expires after 30 minutes."
+    },
+    {
+      "title": "Enable two-factor authentication",
+      "content": "Go to Settings > Security and turn on two-factor authentication. Scan the QR code with an authenticator app and enter the six-digit code to confirm."
+    },
+    {
+      "title": "Lost two-factor device",
+      "content": "If you lost the phone with your authenticator app, use one of your saved backup codes to sign in, then set up two-factor authentication again from Settings > Security."
+    },
+    {
+      "title": "Change email address",
+      "content": "You can change the email on your account under Settings > Profile. We send a confirmation link to the new address, and the change takes effect once you click it."
+    },
+    {
+      "title": "Delete account",
+      "content": "To permanently delete your account and all of its data, go to Settings > Account > Delete account. Deletion cannot be undone."
+    },
+    {
+      "title": "Refund policy",
+      "content": "Purchases can be refunded within 30 days if the product is unused. Contact billing to start a refund; it reaches your card in 5 to 10 business days."
+    },
+    {
+      "title": "Cancel subscription",
+      "content": "You can cancel anytime from Billing > Subscription. You keep access until the end of the current billing period and are not charged again."
+    },
+    {
+      "title": "Update payment method",
+      "content": "Add or replace your credit card under Billing > Payment methods. The new card is used for your next renewal."
+    },
+    {
+      "title": "Download invoices",
+      "content": "Invoices for every payment are available under Billing > History as PDF files. You can add your company name and tax number before downloading."
+    },
+    {
+      "title": "Shipping times",
+      "content": "Standard orders arrive within five business days. Express shipping takes two business days and is available for most countries."
+    },
+    {
+      "title": "Track my order",
+      "content": "Once your order ships you get an email with a tracking number. Enter it on the carrier's website or in Orders > Track to see where your package is."
+    },
+    {
+      "title": "International shipping",
+      "content": "We ship to over 40 countries. Customs duties and import taxes are charged by your country and are not included in the order total."
+    },
+    {
+      "title": "Return an item",
+      "content": "Items can be returned within 30 days in their original packaging. Print the return label from Orders > Return and drop the parcel at any post office."
+    },
+    {
+      "title": "Office hours",
+      "content": "Support is available Monday to Friday, 9am to 5pm UTC. Messages sent outside these hours are answered the next business day."
+    },
+    {
+      "title": "Contact support",
+      "content": "Email support@example.com or use the chat widget in the bottom corner of the app. Include your order number if your question is about an order."
+    },
+    {
+      "title": "Supported browsers",
+      "content": "The app works in the latest two versions of Chrome, Firefox, Safari and Edge. Internet Explorer is not supported."
+    },
+    {
+      "title": "Export my data",
+      "content": "You can download a copy of everything stored in your account as a ZIP file from Settings > Account > Export data. It is emailed to you within one hour."
+    },
+    {
+      "title": "API rate limits",
+      "content": "The public API allows 100 requests per minute per API key. Requests over the limit get an HTTP 429 response and should be retried after the time in the Retry-After header."
+    },
+    {
+      "title": "Data security",
+      "content": "All data is encrypted in transit with TLS and at rest with AES-256. We run daily encrypted backups and never sell customer data."
+    },
+    {
+      "title": "Team members and roles",
+      "content": "Account owners can invite teammates under Settings > Team. Admins can manage billing and members; members can only use the product."
+    }
+  ],
+  "questions": [
+    {
+      "category": "paraphrase",
+      "question": "I can't remember my login credentials",
+      "relevant": [
+        "Reset password"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "someone is asking me for a six digit code but my phone is gone",
+      "relevant": [
+        "Lost two-factor device"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "how do I make my account safer with an extra login step?",
+      "relevant": [
+        "Enable two-factor authentication"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "I changed jobs, how do I switch the address you send mail to?",
+      "relevant": [
+        "Change email address"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "I want to wipe everything and close my profile for good",
+      "relevant": [
+        "Delete account"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "can I get my money back for something I bought?",
+      "relevant": [
+        "Refund policy"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "stop charging me every month",
+      "relevant": [
+        "Cancel subscription"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "my credit card expired, what now?",
+      "relevant": [
+        "Update payment method"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "I need a receipt for my accountant",
+      "relevant": [
+        "Download invoices"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "how fast will my package get to me?",
+      "relevant": [
+        "Shipping times"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "where is my parcel right now?",
+      "relevant": [
+        "Track my order"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "do you deliver abroad, and will I pay extra fees?",
+      "relevant": [
+        "International shipping"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "the shirt doesn't fit, how do I send it back?",
+      "relevant": [
+        "Return an item"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "who do I write to about a problem?",
+      "relevant": [
+        "Contact support"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "will it run on my old laptop's browser?",
+      "relevant": [
+        "Supported browsers"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "I want a backup copy of all my stuff",
+      "relevant": [
+        "Export my data"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "why am I getting too many requests errors from your API?",
+      "relevant": [
+        "API rate limits"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "is my information stored safely?",
+      "relevant": [
+        "Data security"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "question": "how can my coworker get access to our workspace?",
+      "relevant": [
+        "Team members and roles"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "How do I reset my password?",
+      "relevant": [
+        "Reset password"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "enable two-factor authentication",
+      "relevant": [
+        "Enable two-factor authentication"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "refund policy",
+      "relevant": [
+        "Refund policy"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "cancel my subscription",
+      "relevant": [
+        "Cancel subscription"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "shipping times",
+      "relevant": [
+        "Shipping times"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "supported browsers",
+      "relevant": [
+        "Supported browsers"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "API rate limit",
+      "relevant": [
+        "API rate limits"
+      ]
+    },
+    {
+      "category": "keyword",
+      "question": "download invoices",
+      "relevant": [
+        "Download invoices"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "I lost access to my authenticator",
+      "relevant": [
+        "Lost two-factor device"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "how do I get my money back after cancelling",
+      "relevant": [
+        "Refund policy",
+        "Cancel subscription"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "delivery status",
+      "relevant": [
+        "Track my order",
+        "Shipping times"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "returning a gift",
+      "relevant": [
+        "Return an item"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "update my billing info",
+      "relevant": [
+        "Update payment method"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "how long until a refund shows up on my card?",
+      "relevant": [
+        "Refund policy"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "pasword reest",
+      "relevant": [
+        "Reset password"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "when can I reach a human?",
+      "relevant": [
+        "Office hours",
+        "Contact support"
+      ]
+    },
+    {
+      "category": "hard",
+      "question": "Hi, I bought a jacket last week but haven't received any email with a tracking link, how can I follow the delivery?",
+      "relevant": [
+        "Track my order"
+      ]
+    },
+    {
+      "category": "out-of-domain",
+      "question": "what is the capital of France?",
+      "relevant": []
+    },
+    {
+      "category": "out-of-domain",
+      "question": "recommend a good pizza recipe",
+      "relevant": []
+    },
+    {
+      "category": "out-of-domain",
+      "question": "who won the football world cup in 2018?",
+      "relevant": []
+    },
+    {
+      "category": "out-of-domain",
+      "question": "how do I train a neural network?",
+      "relevant": []
+    },
+    {
+      "category": "out-of-domain",
+      "question": "tell me a joke",
+      "relevant": []
+    },
+    {
+      "category": "out-of-domain",
+      "question": "what's the weather tomorrow?",
+      "relevant": []
+    }
+  ]
+}

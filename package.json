@@ -11,6 +11,7 @@
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
     "test": "node --test",
+    "eval": "node evals/run.js",
     "cleanup:embeddings": "node src/cleanupEmbeddings.js"
   },
   "keywords": [],

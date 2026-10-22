@@ -34,7 +34,6 @@ router.post("/", async (req, res) => {
   res.status(201).json(rows[0]);
 });
 
-// Retry documents saved as pending because embedding failed earlier
 router.post("/reembed", async (req, res) => {
   const { rows: pending } = await query(
     "SELECT id, title, content FROM documents WHERE embedding_status = 'pending' ORDER BY id LIMIT $1",
